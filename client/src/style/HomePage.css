@@ -1,0 +1,23 @@
+.text_wrapper{
+ min-height:50vh;
+ padding: 1rm;
+ display:flex;
+ flex-direction: column;
+ align-items: center;
+ justify-content: center;
+}
+.text_wrapper input{
+    padding:1rem 2rem;
+}
+
+.text_wrapper input:focus{
+    box-shadow:none;
+    outline:none;
+}
+.text_wrapper h1{
+    font-size:4rem;
+}
+.icon_wrapper{
+  background-color: white;
+  border:none; 
+}

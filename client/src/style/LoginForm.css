@@ -1,0 +1,25 @@
+/* LoginForm.css */
+
+.login-form-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 90vh;
+  width: 70%; /* Adjust width as needed */
+}
+
+.login-form {
+  max-width: 500px; /* Increase max-width for a larger form */
+  width: 100%; /* Ensure the form takes full width within its container */
+  padding: 30px; /* Increase padding for more space inside the form */
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  background-color: #f9f9f9;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.login-form h2 {
+  color: #333;
+}
+
+  

@@ -1,0 +1,78 @@
+const express=require('express')
+const router=express.Router();
+const Userdata=require('../models/user.model');
+
+// //get all blogs
+// router.get('/register',async(req,res)=>{
+//     try{
+//      const blogs=await Userdata.find({})
+//      res.send(blogs);
+//     }catch(err){
+//         console.log(err);
+//         res.status(400).send({message:"error occured while creating blog"});
+//     }
+// })
+//get single blog
+// router.get('/blog/:id',async(req,res)=>{
+// try{
+//     //get the end point from the url
+//  const id=req.params.id;
+//  const response=await Blogs.findById(id);
+//  res.send(response);
+//  console.log(response);
+// }catch(err){
+//         console.log(err);
+//         res.status(400).send({message:"error occured while creating blog"});
+//     }
+// })
+console.log("hello");
+router.post('/register', async (req, res) => {
+    const { username, email, password } = req.body;
+    const exists=await Userdata.findOne({email:email});
+    if(exists){
+      return res.status(409).json({ message: 'Email already exists' });
+        }
+    const newUser = new Userdata({
+      username,
+      email,
+      password
+    });
+  
+    try {
+      const savedUser = await newUser.save();
+      return res.status(200).json({ message: 'sucessfully Registered' });
+    } catch (err) {
+      return res.status(400).json({ message: err.message });
+    }
+  }); 
+// //update blog
+// router.put('/blog/:id',async(req,res)=>{
+//     try{
+//         const id=req.params.id;
+//         /// the data that we want to update 
+//         const data=req.body;
+//         const response=await Blogs.findByIdAndUpdate(id,data,{returnOriginal:false});
+//         res.send(response);
+//         console.log(response);
+//     }
+//     catch(err){
+//         console.log(err);
+//         res.status(400).send({message:"error occured while updating blog"});
+//     }
+// })
+// //delet blog
+// router.delete('/blog/:id',async(req,res)=>{
+//     try{
+//         const id=req.params.id;
+//         /// the data that we want to update 
+//         const response=await Blogs.findByIdAndDelete(id,{returnOriginal:false});
+//         console.log(response);
+//         res.send("sucessfully deleted blog");
+//     }
+//     catch(err){
+//         console.log(err);
+//         res.status(400).send({message:"error occured while deleting blog"});
+//     }
+// })
+
+module.exports=router;
