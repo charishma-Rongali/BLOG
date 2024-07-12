@@ -4,11 +4,13 @@ import { useState } from 'react';
 import { Form, Button, Container } from 'react-bootstrap';
 import axios from 'axios';
 import '../style/RegisterForm.css'; // Import your custom CSS file for additional styling
+import {useNavigate} from 'react-router-dom';
 
 function Register() {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const navigate = useNavigate();
 
   const handleUsernameChange = (e) => {
     setUsername(e.target.value);
@@ -35,15 +37,16 @@ function Register() {
       });
       if(response.status===200){
         alert("Registered Successfully");
+        navigate('/');
       }
     }
 
     catch (error) {  
       if (error.response && error.response.status === 409) {
         alert("Username already exist");
+        navigate('/Login');
       } else {
-        alert("Registration failed");
-      } }
+        alert("Registration failed");} }
     setUsername('');
     setEmail('');
     setPassword('');

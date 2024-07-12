@@ -5,6 +5,7 @@ import Form from "react-bootstrap/Form";
 import InputGroup from "react-bootstrap/InputGroup";
 import { IoIosSearch } from "react-icons/io";
 import "../style/HomePage.css";
+import Newcard from "./Newcard";
 
 function Homepage() {
   return(
@@ -16,6 +17,9 @@ function Homepage() {
                  <InputGroup.Text id="basic-addon1" className="icon_wrapper"><IoIosSearch /></InputGroup.Text>
                  <Form.Control type="search" placeholder="search your blogs here" />
             </InputGroup>
+        </Container>
+        <Container className="mt-5 ">
+          <Newcard/>
         </Container>
     </div>
   );

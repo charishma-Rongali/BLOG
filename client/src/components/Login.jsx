@@ -2,28 +2,44 @@
 import axios from 'axios';
 import { useState } from 'react';
 import { Form, Button, Container } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
 import '../style/LoginForm.css'; // Import your custom CSS file for additional styling
 
-function Login() {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
 
+function Login() {
+  const [email, setemail] = useState('');
+  const [password, setPassword] = useState('');
+  const navigate=useNavigate();
   const handleUsernameChange = (e) => {
-    setUsername(e.target.value);
+    setemail(e.target.value);
   };
 
   const handlePasswordChange = (e) => {
     setPassword(e.target.value);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async(e) => {
     e.preventDefault();
+    try {
+      const response = await axios.post('http://localhost:5000/login', {
+        email,
+        password
+      });
+      if(response.status==200){
+        navigate('/');
+      }
+    }catch(err){
+      if(err.response && err.response.status===401){
+        alert("you are not registered");
+        navigate('/register');
+      }else{
+        alert("Login failed");
+      }
+    }
     // Handle login logic here, such as sending credentials to a server
     //console.log(`Username: ${username}, Password: ${password}`);
-    axios.post('')
-    alert("login successfull");
     // Reset form fields after submission (optional)
-    setUsername('');
+    setemail('');
     setPassword('');
   };
 
@@ -33,11 +49,11 @@ function Login() {
         <h2 className="text-center mb-4">Login</h2>
 
         <Form.Group controlId="formBasicUsername">
-          <Form.Label>Username</Form.Label>
+          <Form.Label>Email</Form.Label>
           <Form.Control
             type="text"
-            placeholder="Enter username"
-            value={username}
+            placeholder="Enter eamil"
+            value={email}
             onChange={handleUsernameChange}
             required
           />

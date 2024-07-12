@@ -1,17 +1,20 @@
-const express=require('express')
+const express=require('express');
 const router=express.Router();
 const Userdata=require('../models/user.model');
+const jwt=require('jsonwebtoken');
+const Blog=require('../models/blog.model');
+const middleware=require('../middleware');
 
-// //get all blogs
-// router.get('/register',async(req,res)=>{
-//     try{
-//      const blogs=await Userdata.find({})
-//      res.send(blogs);
-//     }catch(err){
-//         console.log(err);
-//         res.status(400).send({message:"error occured while creating blog"});
-//     }
-// })
+//get all blogs
+router.get('/register',async(req,res)=>{
+    try{
+     const data=await Userdata.find({})
+     res.send(data);
+    }catch(err){
+        console.log(err);
+        res.status(400).send({message:"error occured while creating blog"});
+    }
+})
 //get single blog
 // router.get('/blog/:id',async(req,res)=>{
 // try{
@@ -45,6 +48,56 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ message: err.message });
     }
   }); 
+
+  router.post('/login', async(req,res)=>{
+    const {email,password}=req.body;
+    try{
+      const exists=await Userdata.findOne({email:email});
+      if (!exists) {
+        return res.status(400).send("User not found");
+      }
+      if (exists.password !== password) {
+        return res.status(400).send("Invalid credentials");
+      }
+      const ID=exists._id;
+      const payload={
+        id:ID
+      }
+      jwt.sign(payload,"cherry",(err,token)=>{
+        if(token){
+          return res.json({"token":token});
+        }
+        else{
+          console.log("error in creating a token");
+        }
+      })
+    }catch(err){
+      console.log(err);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  })
+
+
+  router.post('/create-blog',middleware,async(req,res)=>{
+    const {image,title,shortDescription,longDescription}=req.body;
+    const userId=req.id;
+    console.log(userId);
+    try{
+      const blog = new Blog({
+        image,
+        title,
+        shortDescription,
+        longDescription,
+        user: userId // Assign the user ID to the blog's user field
+      });
+      
+      await blog.save();
+      return res.status(200).json({message:"blog saved sucsessfully"});
+    }
+    catch(err){
+       return res.status(400).json({message:"blog data not saved"});
+    }
+  });
 // //update blog
 // router.put('/blog/:id',async(req,res)=>{
 //     try{
