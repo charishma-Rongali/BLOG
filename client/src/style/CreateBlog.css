@@ -1,0 +1,78 @@
+.blog-form {
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    width: 80%; /* Adjust width as needed */
+    max-width: 600px; /* Limit maximum width */
+    margin: 0 auto; /* Center align horizontally */
+  }
+  .blog-form {
+    background-color: #f8f9fa;
+    padding: 10px; /* Reduced padding */
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    width: 60%; /* Adjusted width */
+    max-width: 600px;
+    margin: 0 auto; /* Center align horizontally */
+  }
+  
+  .blog-form h2 {
+    font-size: 20px; /* Reduced font size */
+    margin-bottom: 15px;
+  }
+  
+  .blog-form label {
+    font-weight: bold;
+    font-size: 14px; /* Reduced font size */
+  }
+  
+  .blog-form .form-group {
+    margin-bottom: 10px; /* Reduced margin */
+  }
+  .blog-form h2 {
+    font-size: 24px;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  
+  .blog-form label {
+    font-weight: bold;
+  }
+  
+  .blog-form button[type="submit"] {
+    margin-top: 20px;
+  }
+  
+  .blog-form {
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    width: 80%; /* Adjusted width */
+    margin: auto; /* Center align */
+  }
+  
+  .blog-form h2 {
+    font-size: 24px;
+    margin-bottom: 20px;
+  }
+  
+  .blog-form label {
+    font-weight: bold;
+  }
+  
+  .blog-form button[type="submit"] {
+    margin-top: 20px;
+  }
+  
+  /* Styling for form controls */
+  .blog-form .form-control {
+    border-color: #343a40; /* Dark border color */
+  }
+  
+  /* Additional styling for textareas */
+  .blog-form textarea.form-control {
+    resize: vertical; /* Allow vertical resizing */
+  }
+  

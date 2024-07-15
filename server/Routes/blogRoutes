@@ -1,131 +1,168 @@
-const express=require('express');
-const router=express.Router();
-const Userdata=require('../models/user.model');
-const jwt=require('jsonwebtoken');
-const Blog=require('../models/blog.model');
-const middleware=require('../middleware');
+const express = require('express');
+const router = express.Router();
+const Userdata = require('../models/user.model');
+const jwt = require('jsonwebtoken');
+const Blog = require('../models/blog.model');
+const middleware = require('../middleware');
+const multer = require('multer');
+// const mongoose=require('mongoose');
+// const Blog = require('../models/Blog');
+// const Userdata = require('../models/user.model');
 
-//get all blogs
-router.get('/register',async(req,res)=>{
-    try{
-     const data=await Userdata.find({})
-     res.send(data);
-    }catch(err){
-        console.log(err);
-        res.status(400).send({message:"error occured while creating blog"});
-    }
-})
-//get single blog
-// router.get('/blog/:id',async(req,res)=>{
-// try{
-//     //get the end point from the url
-//  const id=req.params.id;
-//  const response=await Blogs.findById(id);
-//  res.send(response);
-//  console.log(response);
-// }catch(err){
-//         console.log(err);
-//         res.status(400).send({message:"error occured while creating blog"});
-//     }
-// })
-console.log("hello");
+// Multer storage configuration
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads'); // Specify the directory where uploaded files should be stored
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + '-' + file.originalname); // Define the filename for uploaded files
+  }
+});
+
+const upload = multer({ storage: storage }); // Initialize Multer with the defined storage
+
+
+// User registration endpoint
 router.post('/register', async (req, res) => {
-    const { username, email, password } = req.body;
-    const exists=await Userdata.findOne({email:email});
-    if(exists){
+  const { username, email, password } = req.body;
+  
+  try {
+    const exists = await Userdata.findOne({ email: email });
+    if (exists) {
       return res.status(409).json({ message: 'Email already exists' });
-        }
+    }
+    
     const newUser = new Userdata({
       username,
       email,
       password
     });
   
-    try {
-      const savedUser = await newUser.save();
-      return res.status(200).json({ message: 'sucessfully Registered' });
-    } catch (err) {
-      return res.status(400).json({ message: err.message });
-    }
-  }); 
+    await newUser.save();
+    return res.status(200).json({ message: 'Successfully Registered' });
+  } catch (err) {
+    return res.status(400).json({ message: err.message });
+  }
+});
 
-  router.post('/login', async(req,res)=>{
-    const {email,password}=req.body;
-    try{
-      const exists=await Userdata.findOne({email:email});
-      if (!exists) {
-        return res.status(400).send("User not found");
+// User login endpoint (without encryption)
+router.post('/login', async (req, res) => {
+  const { email, password } = req.body;
+  
+  try {
+    const user = await Userdata.findOne({ email: email });
+    if (!user) {
+       res.status(400).send("User not found ");
+       return alert("please Register");
+    }
+    
+    // Compare the plain-text password with the hashed password from the database
+    const isMatch = (user.password === password); // Simplified comparison
+    
+    if (!isMatch) {
+       res.status(400).send("Invalid credentials");
+       return alert("Invalid credentials")
+    }
+    
+    const payload = { id: user._id };
+    jwt.sign(payload, "cherry", (err, token) => {
+      if (err) {
+        console.error("Error signing token:", err);
+        return res.status(401).json({ message: "Error signing token" });
       }
-      if (exists.password !== password) {
-        return res.status(400).send("Invalid credentials");
-      }
-      const ID=exists._id;
-      const payload={
-        id:ID
-      }
-      jwt.sign(payload,"cherry",(err,token)=>{
-        if(token){
-          return res.json({"token":token});
-        }
-        else{
-          console.log("error in creating a token");
-        }
-      })
-    }catch(err){
-      console.log(err);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  })
+      return res.status(200).json({ token });
+    });
+  } catch (err) {
+    console.error("Login error:", err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+});
 
 
-  router.post('/create-blog',middleware,async(req,res)=>{
-    const {image,title,shortDescription,longDescription}=req.body;
-    const userId=req.id;
-    console.log(userId);
-    try{
-      const blog = new Blog({
-        image,
-        title,
-        shortDescription,
-        longDescription,
-        user: userId // Assign the user ID to the blog's user field
-      });
-      
-      await blog.save();
-      return res.status(200).json({message:"blog saved sucsessfully"});
-    }
-    catch(err){
-       return res.status(400).json({message:"blog data not saved"});
-    }
-  });
-// //update blog
-// router.put('/blog/:id',async(req,res)=>{
-//     try{
-//         const id=req.params.id;
-//         /// the data that we want to update 
-//         const data=req.body;
-//         const response=await Blogs.findByIdAndUpdate(id,data,{returnOriginal:false});
-//         res.send(response);
-//         console.log(response);
-//     }
-//     catch(err){
-//         console.log(err);
-//         res.status(400).send({message:"error occured while updating blog"});
-//     }
-// })
-// //delet blog
-// router.delete('/blog/:id',async(req,res)=>{
-//     try{
-//         const id=req.params.id;
-//         /// the data that we want to update 
-//         const response=await Blogs.findByIdAndDelete(id,{returnOriginal:false});
-//         console.log(response);
-//         res.send("sucessfully deleted blog");
-//     }
-//     catch(err){
-//         console.log(err);
-//         res.status(400).send({message:"error occured while deleting blog"});
-//     }
-// })
+// Create blog endpoint with image upload
+router.post('/create-blog', middleware, upload.single('image'), async (req, res) => {
+  const { title, shortDescription, longDescription } = req.body;
+  const userId = req.id;
+  
+  // Check if a file was uploaded
+  if (!req.file) {
+    return res.status(400).json({ message: "No file uploaded" });
+  }
+  
+  try {
+    const blog =  new Blog({
+      image: req.file.path,
+      title,
+      shortDescription,
+      longDescription,
+      user: userId
+    });
 
-module.exports=router;
+    const savedBlog = await blog.save();
+    console.log('Blog saved:', savedBlog);  // Log the saved blog data
+    return res.status(200).json(savedBlog);
+  } catch (err) {
+    console.error('Error creating blog', err.message);
+    return res.status(400).json({ message: "Blog data not saved" });
+  }
+});
+
+
+router.get('/get-all-blogs',async(req,res)=>{
+  try{
+    const allBlogs=await Blog.find({}).populate('user');
+    return res.status(200).json(allBlogs);
+    console.log("blogs succesfully retrived");
+  }catch(err){
+    console.log("fetching all blogs Error",err.message);
+    return res.status(400).json({message:"fetching all blogs Error "});
+  }
+})
+
+router.delete('/delete-blog/:id', async (req, res) => {
+  const blogId = req.params.id;
+
+  try {
+    const deletedBlog = await Blog.findByIdAndDelete(blogId);
+    if (!deletedBlog) {
+      return res.status(404).json({ error: "Blog not found" });
+    }
+    res.status(200).json({ message: "Blog deleted successfully", deletedBlog });
+  } catch (error) {
+    console.error("Error deleting blog:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+//// const id = '6692a52d744dc197b4a8e6c3'; // Replace with the actual _id you want to query
+// let obectid = new ObjectId(id);
+// const response = await Blog.findOne({ _id:obectid});
+// console.log('Retrieved document:', response);
+ 
+// Retrieve the blog by image path
+// router.get('/get-blog-by-image', async (req, res) => {
+//   try {
+//     const { imagePath } = req.query;
+
+//     // Find the blog entry by image path
+//     const blog = await Blog.findOne({ image: imagePath });
+
+//     if (!blog) {
+//       return res.status(404).json({ message: 'No blog found with the specified image path' });
+//     }
+
+//     // Return the blog data found by image path
+//     res.status(200).json(blog);
+//   } catch (err) {
+//     console.error('Error retrieving blog by image path:', err);
+//     res.status(500).json({ message: 'Error retrieving blog by image path' });
+//   }
+// });
+
+
+ 
+
+
+
+module.exports = router;

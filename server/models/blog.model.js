@@ -19,7 +19,7 @@ const blogSchema = new mongoose.Schema({
     },
     user: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: Userdata, // Reference to the Registeruser model
+        ref: 'Userdata', // Reference to the Registeruser model
         required: true}
 });
 

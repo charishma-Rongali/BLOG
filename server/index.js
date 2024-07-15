@@ -3,6 +3,7 @@ const App=express();
 const cors=require('cors');
 const mongoose=require('mongoose');
 const bodyParser = require('body-parser'); 
+const path = require('path'); // Import the path module
 require('dotenv').config();
 const blogRoutes=require('./routes/blogRoutes');
 
@@ -13,7 +14,9 @@ App.use(cors());
 //to post the json data middlware 
 App.use(express.json());
 
-App.use('/',blogRoutes);
+App.use('/',blogRoutes );
+
+App.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 mongoose.connect(process.env.db_URI).then(()=>{
     //console.log(result);
