@@ -5,6 +5,9 @@ const jwt = require('jsonwebtoken');
 const Blog = require('../models/blog.model');
 const middleware = require('../middleware');
 const multer = require('multer');
+require('dotenv').config()
+const secretKey = process.env.JWT_SECRET; 
+
 // const mongoose=require('mongoose');
 // const Blog = require('../models/Blog');
 // const Userdata = require('../models/user.model');
@@ -66,7 +69,7 @@ router.post('/login', async (req, res) => {
     }
     
     const payload = { id: user._id };
-    jwt.sign(payload, "cherry", (err, token) => {
+    jwt.sign(payload,secretKey, (err, token) => {
       if (err) {
         console.error("Error signing token:", err);
         return res.status(401).json({ message: "Error signing token" });
@@ -118,7 +121,23 @@ router.get('/get-all-blogs',async(req,res)=>{
     console.log("fetching all blogs Error",err.message);
     return res.status(400).json({message:"fetching all blogs Error "});
   }
-})
+});
+
+router.get('/get-blog/:id', async(req,res)=>{
+  const blogId = req.params.id;
+  try{
+    const blog= await Blog.findById(blogId);
+    if(blog){
+      res.json(blog);
+      console.log(blog); 
+    }
+    else {
+      res.status(404).json({ message: 'Blog not found' });
+    }
+  }catch (err) {
+    res.status(400).json({ message: err.message });
+}});
+
 
 router.put('/update-blog/:id', upload.single('image'), async (req, res) => {
   const { title, shortDescription, longDescription } = req.body;

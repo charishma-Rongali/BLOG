@@ -14,7 +14,7 @@ App.use(cors());
 //to post the json data middlware 
 App.use(express.json());
 
-App.use('/',blogRoutes );
+App.use('/', blogRoutes);
 
 App.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 

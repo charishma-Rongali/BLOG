@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
-
+const secretKey = process.env.JWT_SECRET; 
+require('dotenv').config();
 // All the token activities are handled by the middleware.
 module.exports = function (req, res, next) {
     try {
@@ -9,7 +10,7 @@ module.exports = function (req, res, next) {
         }
 
         // If the token is there, then we will verify
-        const decoded = jwt.verify(token, 'cherry');//ee step lo token ni verify chesi decode chesi decoded variable lo pettesthunnam
+        const decoded = jwt.verify(token,secretKey);//ee step lo token ni verify chesi decode chesi decoded variable lo pettesthunnam
 
         // After decoding, we will get the same payload that we have sent while signing
         req.id = decoded.id; // Here we are decoding because we are passing that user particular id to the /myblog

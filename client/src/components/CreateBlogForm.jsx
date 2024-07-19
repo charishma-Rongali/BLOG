@@ -8,6 +8,7 @@ const CreateBlogForm = () => {
   const [title, setTitle] = useState('');
   const [shortDescription, setShortDescription] = useState('');
   const [longDescription, setLongDescription] = useState('');
+  const [imageUrl, setImageUrl] = useState(''); // For displaying the existing image
   const navigate = useNavigate();
   const { id } = useParams();
 
@@ -16,10 +17,14 @@ const CreateBlogForm = () => {
       // Fetch existing blog data for editing
       axios.get(`http://localhost:5000/get-blog/${id}`)
         .then(response => {
-          const { title, shortDescription, longDescription } = response.data;
+          const { image, title, shortDescription, longDescription } = response.data;
           setTitle(title);
           setShortDescription(shortDescription);
           setLongDescription(longDescription);
+          
+          // Construct the full image URL for display
+          const imageUrl = `http://localhost:5000/${image}`; // Adjust this URL based on your server configuration
+          setImageUrl(imageUrl);
         })
         .catch(err => console.error('Error fetching blog:', err));
     }
@@ -44,22 +49,21 @@ const CreateBlogForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     const token = localStorage.getItem('token');
 
     if (!token) {
       return alert('No token found, please login first');
     }
 
-    try {
-      const formData = new FormData();
-      if (imageFile) {
-        formData.append('image', imageFile);
-      }
-      formData.append('title', title);
-      formData.append('shortDescription', shortDescription);
-      formData.append('longDescription', longDescription);
+    const formData = new FormData();
+    if (imageFile) {
+      formData.append('image', imageFile);
+    }
+    formData.append('title', title);
+    formData.append('shortDescription', shortDescription);
+    formData.append('longDescription', longDescription);
 
+    try {
       let response;
       if (id) {
         // If ID exists, update existing blog
@@ -69,20 +73,23 @@ const CreateBlogForm = () => {
             'x-token': token
           }
         });
-
-        if (response.status === 200) {
-          if(id){
-            alert('Blog updated successfully');
-          }
-          else alert('Blog saved successfully');
-          navigate('/');
-        }
+        alert('Blog updated successfully');
       } else {
-        alert('No blog ID provided for update');
+        // If no ID, create a new blog
+        response = await axios.post('http://localhost:5000/create-blog', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            'x-token': token
+          }
+        });
+        alert('Blog created successfully');
       }
-    } catch (err) {
-      console.error('Error updating blog:', err.message);
-      alert('Failed to update blog. Please try again later.');
+      
+      console.log('Blog response:', response.data);
+      navigate('/');
+    } catch (error) {
+      console.error('Error saving blog:', error.message);
+      alert('Failed to save blog. Please try again later.');
     }
   };
 
@@ -90,14 +97,19 @@ const CreateBlogForm = () => {
     <Container className="blog-form">
       <h2 className="my-4">{id ? 'Edit Blog' : 'Create a New Blog'}</h2>
       <Form onSubmit={handleSubmit}>
+        {imageUrl && !imageFile && (
+          <Form.Group className="mb-3" controlId="existingImage">
+            <Form.Label>Existing Image:</Form.Label>
+            <img src={imageUrl} alt="Existing blog" style={{ maxWidth: '100%' }} />
+          </Form.Group>
+        )}
+
         <Form.Group className="mb-3" controlId="image">
-          <Form.Label>Upload Image:</Form.Label>
+          <Form.Label>{id ? 'Change Image:' : 'Upload Image:'}</Form.Label>
           <Form.Control
             type="file"
             onChange={handleImageChange}
             accept=".jpg,.jpeg,.png"
-            // Only required for new blog creation
-            required={!id}
           />
         </Form.Group>
 
