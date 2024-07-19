@@ -1,19 +1,33 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Container, Form, Button } from 'react-bootstrap';
-import Homepage from './Homepage';
-import '../style/CreateBlog.css'; // Import external CSS file
+import { useNavigate, useParams } from 'react-router-dom';
 
-const CreateBlog = () => {
+const CreateBlogForm = () => {
   const [imageFile, setImageFile] = useState(null);
   const [title, setTitle] = useState('');
   const [shortDescription, setShortDescription] = useState('');
   const [longDescription, setLongDescription] = useState('');
+  const navigate = useNavigate();
+  const { id } = useParams();
+
+  useEffect(() => {
+    if (id) {
+      // Fetch existing blog data for editing
+      axios.get(`http://localhost:5000/get-blog/${id}`)
+        .then(response => {
+          const { title, shortDescription, longDescription } = response.data;
+          setTitle(title);
+          setShortDescription(shortDescription);
+          setLongDescription(longDescription);
+        })
+        .catch(err => console.error('Error fetching blog:', err));
+    }
+  }, [id]);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     setImageFile(file);
-    console.log(file);
   };
 
   const handleTitleChange = (e) => {
@@ -32,58 +46,64 @@ const CreateBlog = () => {
     e.preventDefault();
 
     const token = localStorage.getItem('token');
-  
+
     if (!token) {
       return alert('No token found, please login first');
     }
 
     try {
       const formData = new FormData();
-      formData.append('image', imageFile);
+      if (imageFile) {
+        formData.append('image', imageFile);
+      }
       formData.append('title', title);
       formData.append('shortDescription', shortDescription);
       formData.append('longDescription', longDescription);
 
-      const response = await axios.post('http://localhost:5000/create-blog', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          'x-token': token
+      let response;
+      if (id) {
+        // If ID exists, update existing blog
+        response = await axios.put(`http://localhost:5000/update-blog/${id}`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            'x-token': token
+          }
+        });
+
+        if (response.status === 200) {
+          if(id){
+            alert('Blog updated successfully');
+          }
+          else alert('Blog saved successfully');
+          navigate('/');
         }
-      });
-      if (response.status === 200) {
-        const blogData = response.data;
-        console.log('Blog data received:', blogData);
-        alert('Blog saved successfully');
+      } else {
+        alert('No blog ID provided for update');
       }
     } catch (err) {
-      console.error('Error creating blog:', err.message);
-      alert('Failed to create blog. Please try again later.');
+      console.error('Error updating blog:', err.message);
+      alert('Failed to update blog. Please try again later.');
     }
-    setImageFile(null);
-    setTitle('');
-    setShortDescription('');
-    setLongDescription('');
   };
 
   return (
     <Container className="blog-form">
-      <h2 className="my-4">Create a New Blog</h2>
+      <h2 className="my-4">{id ? 'Edit Blog' : 'Create a New Blog'}</h2>
       <Form onSubmit={handleSubmit}>
         <Form.Group className="mb-3" controlId="image">
           <Form.Label>Upload Image:</Form.Label>
           <Form.Control
-            className="border-dark"
             type="file"
             onChange={handleImageChange}
             accept=".jpg,.jpeg,.png"
-            required
+            // Only required for new blog creation
+            required={!id}
           />
         </Form.Group>
 
         <Form.Group className="mb-3" controlId="title">
           <Form.Label>Title:</Form.Label>
           <Form.Control
-            className="border-dark"
             type="text"
             value={title}
             onChange={handleTitleChange}
@@ -94,7 +114,6 @@ const CreateBlog = () => {
         <Form.Group className="mb-3" controlId="shortDescription">
           <Form.Label>Short Description:</Form.Label>
           <Form.Control
-            className="border-dark"
             as="textarea"
             rows={3}
             value={shortDescription}
@@ -106,7 +125,6 @@ const CreateBlog = () => {
         <Form.Group className="mb-3" controlId="longDescription">
           <Form.Label>Long Description:</Form.Label>
           <Form.Control
-            className="border-dark"
             as="textarea"
             rows={5}
             value={longDescription}
@@ -116,15 +134,11 @@ const CreateBlog = () => {
         </Form.Group>
 
         <Button variant="primary" type="submit">
-          Submit
+          {id ? 'Update Blog' : 'Create Blog'}
         </Button>
       </Form>
     </Container>
   );
 };
 
-export default CreateBlog;
-
-// const getResponse = await axios.get(`http://localhost:5000/get-blog?image=${imagePath}`);
-// // Handle the retrieved blog data (just an example)
-// console.log('Data from server:', getResponse.data);
+export default CreateBlogForm;

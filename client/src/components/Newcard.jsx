@@ -3,9 +3,11 @@ import Button from 'react-bootstrap/Button';
 import Card from 'react-bootstrap/Card';
 import axios from 'axios';
 import '../style/Newcard.css';
+import { useNavigate } from 'react-router-dom';
 
 function Newcard() {
   const [allBlogs, setAllBlogs] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchBlogs();
@@ -30,8 +32,12 @@ function Newcard() {
     ));
   };
 
+  const handleUpdate = (blogId) => {
+    navigate(`/create-blog/${blogId}`);
+  };
+
   const handleDelete = (blogId) => {
-    alert("deleting the blog");
+    alert("Deleting the blog");
     axios.delete(`http://localhost:5000/delete-blog/${blogId}`)
       .then(response => {
         console.log("Blog deleted:", response.data);
@@ -62,7 +68,7 @@ function Newcard() {
                 {blog.showFullDescription ? "Read Less" : "Read More..."}
               </Button>
               <div className="text-center mt-3">
-                <Button variant="primary" className="mx-2">EDIT</Button>
+                <Button variant="primary" className="mx-2" onClick={() => handleUpdate(blog._id)}>EDIT</Button>
                 <Button variant="danger" className="mx-2" onClick={() => handleDelete(blog._id)}>DELETE</Button>
               </div>
             </Card.Body>

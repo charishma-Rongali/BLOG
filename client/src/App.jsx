@@ -4,7 +4,7 @@ import Homepage from "./components/Homepage";
 import NavBar from "./components/NavBar";
 import Login from "./components/Login";
 import Register from "./components/Register";
-import CreateBlog from "./components/CreateBlog";
+import CreateBlogForm from "./components/CreateBlogForm";
 
 function App(){
   return(
@@ -12,7 +12,8 @@ function App(){
       <NavBar/>
       <Routes>
       <Route path="/" element={<Homepage />} />
-      <Route path="/create-blog" element={<CreateBlog />} />
+      <Route path="/create-blog" element={<CreateBlogForm />} />
+      <Route path="/create-blog/:id" element={<CreateBlogForm />} />##edit the blog
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       </Routes>
@@ -21,3 +22,7 @@ function App(){
 }
 
 export default App;
+
+//      <Route path="/newcard" element={<Newcard />} />
+//      <Route path="/create-blog/:id" element={<CreateBlog />} />##edit the blog
+
