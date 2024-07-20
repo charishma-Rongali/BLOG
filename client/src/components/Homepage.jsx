@@ -11,8 +11,8 @@ function Homepage() {
   return(
     <div>
         <Container fluid className="bg bg-primary text_wrapper text-light">
-            <h1>Welcome to my  Blogs</h1>
-            <p>Explore the blogs from various fileds</p>
+            <h1>Discover Your Next Favorite Blog</h1>
+            <p>Explore a variety of interesting and informative blogs on different topics. Discover content that you’ll enjoy and learn from.</p>
             <SearchBlog setResults={setResults}/>
         </Container>
         <Container className="mt-3">

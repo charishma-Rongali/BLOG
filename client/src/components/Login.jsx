@@ -55,7 +55,7 @@ function Login() {
           <Form.Label>Email</Form.Label>
           <Form.Control
             type="text"
-            placeholder="Enter eamil"
+            placeholder="Enter email"
             value={email}
             onChange={handleUsernameChange}
             required
