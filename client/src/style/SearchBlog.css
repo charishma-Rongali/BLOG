@@ -1,0 +1,19 @@
+.search-input-wrapper .form-control {
+    padding: 1rem 2rem;
+    box-shadow: none !important;
+    outline: none !important;
+    margin: 0; /* Ensure no margin is applied */
+    border-left: none; /* Remove left border to eliminate shadow effect */
+}
+
+.search-input-wrapper .input-group-text {
+    background-color: white;
+    border: none;
+    padding: 0.5rem 1rem; /* Adjust padding as needed */
+    margin: 0; /* Ensure no margin is applied */
+}
+
+.search-input-wrapper {
+    display: flex; /* Ensure flex container for proper alignment */
+    align-items: center; /* Center align items vertically */
+}
