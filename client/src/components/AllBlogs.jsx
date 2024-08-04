@@ -8,21 +8,22 @@ import { useNavigate } from 'react-router-dom';
 function AllBlogs() {
   const [allBlogs, setAllBlogs] = useState([]);
   const navigate = useNavigate();
-  const userId = localStorage.getItem('userId');
+  const id = localStorage.getItem('userId');
+  console.log(id)
 
   useEffect(() => {
     fetchBlogs();
-  }, [userId]); // Add userId as dependency to re-fetch blogs when it changes
+  }, []); // Empty dependency array to run once on component mount
 
   const fetchBlogs = () => {
-    const url = userId 
-      ? `http://localhost:5000/get-blog/${userId}` 
+    const url = id 
+      ? `http://localhost:5000/get-blog/${id}` 
       : 'http://localhost:5000/get-all-blogs';
 
     axios.get(url)
       .then(response => {
         console.log("Blogs fetched:", response.data);
-        setAllBlogs(response.data);
+        setAllBlogs(response.data); // Update state with fetched data
       })
       .catch(error => {
         console.error('Error fetching blogs:', error);
@@ -72,7 +73,7 @@ function AllBlogs() {
               <Button variant="link" onClick={() => toggleDescription(blog._id)}>
                 {blog.showFullDescription ? "Read Less" : "Read More..."}
               </Button>
-              {userId && blog.user === userId && (
+              {id && blog.user === id && (
                 <>
                   <Button variant="link" onClick={() => handleUpdate(blog._id)}>Update</Button>
                   <Button variant="link" onClick={() => handleDelete(blog._id)}>Delete</Button>

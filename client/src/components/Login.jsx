@@ -1,63 +1,66 @@
-// LoginForm.jsx
 import axios from 'axios';
 import { useState } from 'react';
 import { Form, Button, Container } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import '../style/LoginForm.css'; // Import your custom CSS file for additional styling
 
-
-function Login() {
-  const [email, setemail] = useState('');
+function LoginForm() {
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const navigate=useNavigate();
-  const handleUsernameChange = (e) => {
-    setemail(e.target.value);
+  const navigate = useNavigate();
+
+  const handleEmailChange = (e) => {
+    setEmail(e.target.value);
   };
 
   const handlePasswordChange = (e) => {
     setPassword(e.target.value);
   };
 
-  const handleSubmit = async(e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       const response = await axios.post('http://localhost:5000/login', {
         email,
         password
       });
-      const token=response.data.token;
+      console.log("Server Response:", response.data); // Check if userId is present in the response
+      const token = response.data.token;
+      const userId = response.data.userId; // Make sure userId is being received
       localStorage.setItem('token', token);
-      console.log(token);
-      if(response.status==200){
+      localStorage.setItem('userId', userId);
+      // console.log("Stored userId:", userId); // Verify that userId is set correctly
+      // console.log("Stored token:", token);
+      if (response.status === 200) {
         navigate('/');
       }
-    }catch(err){
-      if(err.response && err.response.status===401){
-        alert("you are not registered");
-        navigate('/register');
-      }else{
+    } catch (err) {
+      if (err.response && err.response.status === 401) {
+        alert("You are not registered");
+        navigate('/Register');
+      } else {
         alert("Login failed");
       }
     }
-    // Handle login logic here, such as sending credentials to a server
-    //console.log(`Username: ${username}, Password: ${password}`);
-    // Reset form fields after submission (optional)
-    setemail('');
+    // Reset form fields after submission
+    setEmail('');
     setPassword('');
   };
+  
+  
 
   return (
     <Container className="login-form-container">
       <Form className="login-form" onSubmit={handleSubmit}>
         <h2 className="text-center mb-4">Login</h2>
 
-        <Form.Group controlId="formBasicUsername">
+        <Form.Group controlId="formBasicEmail">
           <Form.Label>Email</Form.Label>
           <Form.Control
-            type="text"
+            type="email"
             placeholder="Enter email"
             value={email}
-            onChange={handleUsernameChange}
+            onChange={handleEmailChange}
             required
           />
         </Form.Group>
@@ -81,5 +84,4 @@ function Login() {
   );
 }
 
-export default Login;
-
+export default LoginForm;
