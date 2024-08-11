@@ -1,89 +1,210 @@
-import React, { useEffect, useState } from 'react';
-import Button from 'react-bootstrap/Button';
-import Card from 'react-bootstrap/Card';
-import axios from 'axios';
-import '../style/Newcard.css';
-import { useNavigate } from 'react-router-dom';
+const express = require('express');
+const router = express.Router();
+const Userdata = require('../models/user.model');
+const jwt = require('jsonwebtoken');
+const Blog = require('../models/blog.model');
+const middleware = require('../middleware');
+const multer = require('multer');
+require('dotenv').config()
+const secretKey = process.env.JWT_SECRET; 
 
-function AllBlogs() {
-  const [allBlogs, setAllBlogs] = useState([]);
-  const navigate = useNavigate();
-  const userId = localStorage.getItem('userId');
+// const mongoose=require('mongoose');
+// const Blog = require('../models/Blog');
+// const Userdata = require('../models/user.model');
 
-  useEffect(() => {
-    fetchBlogs();
-  }, [userId]); // Add userId as dependency to re-fetch blogs when it changes
+// Multer storage configuration
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads'); // Specify the directory where uploaded files should be stored
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + '-' + file.originalname); // Define the filename for uploaded files
+  }
+});
 
-  const fetchBlogs = () => {
-    const url = userId 
-      ? `http://localhost:5000/get-blog/${userId}` 
-      : 'http://localhost:5000/get-all-blogs';
+const upload = multer({ storage: storage }); // Initialize Multer with the defined storage
 
-    axios.get(url)
-      .then(response => {
-        console.log("Blogs fetched:", response.data);
-        setAllBlogs(response.data);
-      })
-      .catch(error => {
-        console.error('Error fetching blogs:', error);
-      });
-  };
 
-  const toggleDescription = (blogId) => {
-    setAllBlogs(prevBlogs => (
-      prevBlogs.map(blog => (
-        blog._id === blogId ? { ...blog, showFullDescription: !blog.showFullDescription } : blog
-      ))
-    ));
-  };
+// User registration endpoint
+router.post('/register', async (req, res) => {
+  const { username, email, password } = req.body;
+  
+  try {
+    const exists = await Userdata.findOne({ email: email });
+    if (exists) {
+      return res.status(409).json({ message: 'Email already exists' });
+    }
+    
+    const newUser = new Userdata({
+      username,
+      email,
+      password
+    });
+  
+    await newUser.save();
+    return res.status(200).json({ message: 'Successfully Registered' });
+  } catch (err) {
+    return res.status(400).json({ message: err.message });
+  }
+});
 
-  const handleUpdate = (blogId) => {
-    navigate(`/create-blog/${blogId}`);
-  };
+// User login endpoint (without encryption)
+router.post('/login', async (req, res) => {
+  const { email, password } = req.body;
+  
+  try {
+    const user = await Userdata.findOne({ email: email });
+    if (!user) {
+      return  res.status(400).send("User not found ");
+    }
+    
+    // Compare the plain-text password with the hashed password from the database
+    const isMatch = (user.password === password); // Simplified comparison
+    
+    if (!isMatch) {
+        return res.status(400).send("Invalid credentials");
+    }
+    
+    const payload = { id: user._id };
+    jwt.sign(payload,secretKey, (err, token) => {
+      if (err) {
+        console.error("Error signing token:", err);
+        return res.status(401).json({ message: "Error signing token" });
+      }
+      return res.status(200).json({ token });
+    });
+  } catch (err) {
+    console.error("Login error:", err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+});
 
-  const handleDelete = (blogId) => {
-    alert("Deleting the blog");
-    axios.delete(`http://localhost:5000/delete-blog/${blogId}`)
-      .then(response => {
-        console.log("Blog deleted:", response.data);
-        fetchBlogs(); // Fetch blogs again after deletion
-      })
-      .catch(error => {
-        console.error('Error deleting blog:', error);
-      });
-  };
 
-  return (
-    <div className="row row-cols-1 row-cols-md-3 g-4">
-      {allBlogs.map(blog => (
-        <div className="col mb-4" key={blog._id}>
-          <Card className="h-100">
-            <Card.Img 
-              variant="top" 
-              src={`http://localhost:5000/${blog.image.replace(/\\/g, '/')}`} 
-              className="blog-image"
-            />
-            <Card.Body>
-              <Card.Title>{blog.title}</Card.Title>
-              <Card.Text>{blog.shortDescription}</Card.Text>
-              {blog.showFullDescription && (
-                <Card.Text className="full-description">{blog.longDescription}</Card.Text>
-              )}
-              <Button variant="link" onClick={() => toggleDescription(blog._id)}>
-                {blog.showFullDescription ? "Read Less" : "Read More..."}
-              </Button>
-              {userId && blog.user === userId && (
-                <>
-                  <Button variant="link" onClick={() => handleUpdate(blog._id)}>Update</Button>
-                  <Button variant="link" onClick={() => handleDelete(blog._id)}>Delete</Button>
-                </>
-              )}
-            </Card.Body>
-          </Card>
-        </div>
-      ))}
-    </div>
-  );
-}
+// Create blog endpoint with image upload
+router.post('/create-blog', middleware, upload.single('image'), async (req, res) => {
+  const { title, shortDescription, longDescription } = req.body;
+  const userId = req.id;
+  
+  // Check if a file was uploaded
+  if (!req.file) {
+    return res.status(400).json({ message: "No file uploaded" });
+  }
+  
+  try {
+    const blog =  new Blog({
+      image: req.file.path,
+      title,
+      shortDescription,
+      longDescription,
+      user: userId
+    });
 
-export default AllBlogs;
+    const savedBlog = await blog.save();
+    console.log('Blog saved:', savedBlog);  // Log the saved blog data
+    return res.status(200).json(savedBlog);
+  } catch (err) {
+    console.error('Error creating blog', err.message);
+    return res.status(400).json({ message: "Blog data not saved" });
+  }
+});
+
+
+router.get('/get-all-blogs',async(req,res)=>{
+  try{
+    const allBlogs=await Blog.find({}).populate('user');
+    return res.status(200).json(allBlogs);
+    console.log("blogs succesfully retrived");
+  }catch(err){
+    console.log("fetching all blogs Error",err.message);
+    return res.status(400).json({message:"fetching all blogs Error "});
+  }
+});
+
+router.get('/get-blog/:id', async(req,res)=>{
+  const blogId = req.params.id;
+  try{
+    const blog= await Blog.findById(blogId);
+    if(blog){
+      res.json(blog);
+      console.log(blog); 
+    }
+    else {
+      res.status(404).json({ message: 'Blog not found' });
+    }
+  }catch (err) {
+    res.status(400).json({ message: err.message });
+}});
+
+
+router.put('/update-blog/:id', upload.single('image'), async (req, res) => {
+  const { title, shortDescription, longDescription } = req.body;
+  const image = req.file ? req.file.path : null;
+
+  try {
+    const blog = await Blog.findById(req.params.id);
+    if (blog) {
+      blog.title = title;
+      blog.shortDescription = shortDescription;
+      blog.longDescription = longDescription;
+      if (image) {
+        blog.image = image;
+      }
+
+      const updatedBlog = await blog.save();
+      res.status(200).json(updatedBlog);
+    } else {
+      res.status(404).json({ message: 'Blog not found' });
+    }
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+});
+
+
+router.delete('/delete-blog/:id', async (req, res) => {
+  const blogId = req.params.id;
+
+  try {
+    const deletedBlog = await Blog.findByIdAndDelete(blogId);
+    if (!deletedBlog) {
+      return res.status(404).json({ error: "Blog not found" });
+    }
+    res.status(200).json({ message: "Blog deleted successfully", deletedBlog });
+  } catch (error) {
+    console.error("Error deleting blog:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+//// const id = '6692a52d744dc197b4a8e6c3'; // Replace with the actual _id you want to query
+// let obectid = new ObjectId(id);
+// const response = await Blog.findOne({ _id:obectid});
+// console.log('Retrieved document:', response);
+ 
+// Retrieve the blog by image path
+// router.get('/get-blog-by-image', async (req, res) => {
+//   try {
+//     const { imagePath } = req.query;
+
+//     // Find the blog entry by image path
+//     const blog = await Blog.findOne({ image: imagePath });
+
+//     if (!blog) {
+//       return res.status(404).json({ message: 'No blog found with the specified image path' });
+//     }
+
+//     // Return the blog data found by image path
+//     res.status(200).json(blog);
+//   } catch (err) {
+//     console.error('Error retrieving blog by image path:', err);
+//     res.status(500).json({ message: 'Error retrieving blog by image path' });
+//   }
+// });
+
+
+ 
+
+
+
+module.exports = router;

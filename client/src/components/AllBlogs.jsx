@@ -6,11 +6,11 @@ import '../style/Newcard.css';
 import { useNavigate } from 'react-router-dom';
 
 function AllBlogs() {
+  // console.log("I am allBogs");
   const [allBlogs, setAllBlogs] = useState([]);
   const navigate = useNavigate();
   const id = localStorage.getItem('userId');
   console.log(id)
-
   useEffect(() => {
     fetchBlogs();
   }, []); // Empty dependency array to run once on component mount

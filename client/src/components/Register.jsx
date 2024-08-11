@@ -39,6 +39,10 @@ function Register() {
         alert("Registered Successfully");
         navigate('/');
       }
+      if(response.status===409){
+        alert("This email is already exixted");
+        navigate('./Login');
+      }
     }
 
     catch (error) {  

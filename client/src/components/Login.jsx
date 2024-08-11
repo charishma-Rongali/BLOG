@@ -22,16 +22,16 @@ function LoginForm() {
     try {
       const response = await axios.post('http://localhost:5000/login', {
         email,
-        password
+        password,
       });
-      console.log("Server Response:", response.data); // Check if userId is present in the response
-      const token = response.data.token;
-      const userId = response.data.userId; // Make sure userId is being received
-      localStorage.setItem('token', token);
-      localStorage.setItem('userId', userId);
-      // console.log("Stored userId:", userId); // Verify that userId is set correctly
-      // console.log("Stored token:", token);
+  
+      console.log("Server Response:", response.data);
       if (response.status === 200) {
+        const token = response.data.token;
+        const userId = response.data.userId;
+        localStorage.setItem('token', token);
+        localStorage.setItem('userId', userId);
+        console.log(token);
         navigate('/');
       }
     } catch (err) {
@@ -39,13 +39,15 @@ function LoginForm() {
         alert("You are not registered");
         navigate('/Register');
       } else {
-        alert("Login failed");
+        alert("Login failed. Please check your credentials and try again.");
       }
     }
-    // Reset form fields after submission
+  
+    // Reset form fields only if submission is successful
     setEmail('');
     setPassword('');
   };
+  
   
   
 
