@@ -1,7 +1,6 @@
 import React from 'react';
 import Card from 'react-bootstrap/Card';
 import Button from 'react-bootstrap/Button';
-import '../style/Newcard.css'; // Ensure this CSS file is imported
 
 const SearchResultsList = ({ results }) => {
   return (
